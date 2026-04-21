@@ -166,8 +166,10 @@ def build_cnn_backbone():
 CNN, PREPROCESS = build_cnn_backbone()
 
 if not os.path.exists(MODEL_PATH):
-    raise RuntimeError(f"Model not found: {MODEL_PATH} (run 04_train_rf_fusion.py first)")
-
+    print(f"⚠️ Model not found: {MODEL_PATH}")
+    RF_MODEL = None
+else:
+    RF_MODEL = joblib.load(MODEL_PATH)
 RF_MODEL = joblib.load(MODEL_PATH)
 
 def extract_img_feat(img_path: str) -> np.ndarray:
@@ -178,6 +180,9 @@ def extract_img_feat(img_path: str) -> np.ndarray:
     return feat.astype(np.float32)
 
 def predict_fusion(img_path: str, density: float, ph: float, flow_time: float):
+    if RF_MODEL is None:
+        raise HTTPException(status_code=500, detail="Model not loaded")
+
     img_feat = extract_img_feat(img_path)
     num_feat = np.array([density, ph, flow_time], dtype=np.float32)
     X = np.concatenate([img_feat, num_feat], axis=0).reshape(1, -1)
@@ -188,7 +193,6 @@ def predict_fusion(img_path: str, density: float, ph: float, flow_time: float):
 
     label = "PURE" if pred == 0 else "ADULTERATED"
     return label, conf, float(proba[1])
-
 # ----------------------------
 # Demo loader
 # ----------------------------
@@ -396,8 +400,7 @@ def apply_filters(query, q: str, result_type: str, min_conf: str):
 # ----------------------------
 # تحميل النماذج الطيفية (Hyperspectral)
 # ----------------------------
-MODEL_DIR = "models/hyperspectral"
-
+MODEL_DIR = os.path.join(PROJECT_ROOT, "models", "hyperspectral")
 try:
     model_class = joblib.load(os.path.join(MODEL_DIR, "model_class.pkl"))
     scaler_class = joblib.load(os.path.join(MODEL_DIR, "scaler_class.pkl"))

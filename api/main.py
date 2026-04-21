@@ -501,3 +501,6 @@ def home(request: Request):
 @app.get("/spectral_analyse", response_class=HTMLResponse)
 def spectral_page(request: Request):
     return templates.TemplateResponse("spectral_analyse.html", {"request": request})
+
+print("MODEL PATH:", MODEL_PATH)
+print("EXISTS:", os.path.exists(MODEL_PATH))

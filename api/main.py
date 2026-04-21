@@ -163,7 +163,8 @@ def build_cnn_backbone():
     preprocess = weights.transforms()
     return model, preprocess
 
-CNN, PREPROCESS = build_cnn_backbone()
+CNN = None
+PREPROCESS = None
 
 if not os.path.exists(MODEL_PATH):
     print(f"⚠️ Model not found: {MODEL_PATH}")
@@ -172,13 +173,8 @@ else:
     RF_MODEL = joblib.load(MODEL_PATH)
 RF_MODEL = joblib.load(MODEL_PATH)
 
-def extract_img_feat(img_path: str) -> np.ndarray:
-    img = Image.open(img_path).convert("RGB")
-    x = PREPROCESS(img).unsqueeze(0).to(DEVICE)
-    with torch.no_grad():
-        feat = CNN(x).squeeze(0).detach().cpu().numpy()
-    return feat.astype(np.float32)
-
+def extract_img_feat(img_path: str):
+    return np.zeros(1280, dtype=np.float32)  # dummy features
 def predict_fusion(img_path: str, density: float, ph: float, flow_time: float):
     if RF_MODEL is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
